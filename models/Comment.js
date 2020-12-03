@@ -1,27 +1,30 @@
 const { Schema, model, Types } = require('mongoose');
-const dateFormat = require('../utils/dateFormat');
+const moment = require('moment');
 
-const replySchema = new Schema(
+const ReplySchema = new Schema(
   {
-    // set custom id to aciod confusion with parent comment _id
+    // set custom id to avoid confusion with parent comment _id
     replyId: {
       type: Schema.Types.ObjectId,
       default: () => new Types.ObjectId()
     },
     replyBody: {
-      type: String
+      type: String,
+      required: true
     },
     writtenBy: {
-      type: String
+      type: String,
+      required: true,
+      trim: true
     },
-    createdAt: { 
-      type: SVGMetadataElement,
+    createdAt: {
+      type: Date,
       default: Date.now,
-      get: createdAtVal => dateFormat(createdAtVal)
+      get: createdAtVal => moment(createdAtVal).format('MMM DD, YYYY [at] hh:mm a')
     }
   },
   {
-    toJson: {
+    toJSON: {
       getters: true
     }
   }
@@ -30,18 +33,20 @@ const replySchema = new Schema(
 const CommentSchema = new Schema(
   {
     writtenBy: {
-      type: String
+      type: String,
+      required: true
     },
     commentBody: {
-      type: String
+      type: String,
+      required: true
     },
     createdAt: {
       type: Date,
       default: Date.now,
-      get: createdAtVal => dateFormat(createdAtVal)
+      get: createdAtVal => moment(createdAtVal).format('MMM DD, YYYY [at] hh:mm a')
     },
-    // add replySchema
-    replies: [replySchema]
+    // use ReplySchema to validate data for a reply
+    replies: [ReplySchema]
   },
   {
     toJSON: {
@@ -52,7 +57,6 @@ const CommentSchema = new Schema(
   }
 );
 
-// get total count of comments and replies on retrieval
 CommentSchema.virtual('replyCount').get(function() {
   return this.replies.length;
 });
